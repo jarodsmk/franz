@@ -131,6 +131,8 @@ export default @inject('stores', 'actions') @observer class AppLayoutContainer e
           retryRequiredRequests={retryRequiredRequests}
           areRequiredRequestsLoading={requests.areRequiredRequestsLoading}
           darkMode={settings.all.app.darkMode}
+          // NOTICE: I modified this line to remove the delayAppScreen since it interfered at times when 
+          // messaging was important. - Jarod
           isDelayAppScreenVisible={false}
         >
           {React.Children.count(children) > 0 ? children : null}
