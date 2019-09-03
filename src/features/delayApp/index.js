@@ -3,7 +3,7 @@ import moment from 'moment';
 import DelayAppComponent from './Component';
 
 import { DEFAULT_FEATURES_CONFIG } from '../../config';
-import { gaEvent } from '../../lib/analytics';
+import { gaEvent, gaPage } from '../../lib/analytics';
 
 const debug = require('debug')('Franz:feature:delayApp');
 
@@ -28,8 +28,12 @@ export default function init(stores) {
   let shownAfterLaunch = false;
   let timeLastDelay = moment();
 
+  window.franz.features.delayApp = {
+    state,
+  };
+
   reaction(
-    () => stores.features.features.needToWaitToProceed && !stores.user.data.isPremium,
+    () => stores.user.isLoggedIn && stores.services.allServicesRequest.wasExecuted && stores.features.features.needToWaitToProceed && !stores.user.data.isPremium,
     (isEnabled) => {
       if (isEnabled) {
         debug('Enabling `delayApp` feature');
@@ -41,6 +45,7 @@ export default function init(stores) {
 
         autorun(() => {
           if (stores.services.all.length === 0) {
+            debug('seas', stores.services.all.length);
             shownAfterLaunch = true;
             return;
           }
@@ -50,7 +55,8 @@ export default function init(stores) {
             debug(`App will be delayed for ${config.delayDuration / 1000}s`);
 
             setVisibility(true);
-            gaEvent('delayApp', 'show', 'Delay App Feature');
+            gaPage('/delayApp');
+            gaEvent('DelayApp', 'show', 'Delay App Feature');
 
             timeLastDelay = moment();
             shownAfterLaunch = true;
@@ -59,7 +65,7 @@ export default function init(stores) {
               debug('Resetting app delay');
 
               setVisibility(false);
-            }, DEFAULT_FEATURES_CONFIG.needToWaitToProceedConfig.wait + 1000); // timer needs to be able to hit 0
+            }, config.delayDuration + 1000); // timer needs to be able to hit 0
           }
         });
       } else {
